@@ -2,6 +2,7 @@ module Options where
 
 import Data.Colour
 import Data.Colour.SRGB
+import Data.Typeable
 import Protocol
 
 data Options = Options {
@@ -26,6 +27,11 @@ data LedOptions = LedOptions {
 allFans :: LedOptions -> Options -> [Options]
 allFans led opts = map (setFan led opts) fans
                    where fans = [Fan1, Fan2, Fan3, Fan4, Fan5, Fan6]
+
+createForFans :: LedOptions -> Options -> Fan -> Fan -> [Options]
+createForFans led opts from to = map (setFan led opts) fans
+                                 where fans = enumFromTo from to
+
 
 setFan :: LedOptions -> Options -> Fan -> Options
 setFan l o f = o { fan = f, ledOptions = l}
@@ -64,3 +70,21 @@ colourToBytes c = [r, g, b]
                     r = channelRed rgb
                     g = channelGreen rgb
                     b = channelBlue rgb
+
+instance Show LedOptions where
+    show opts = e ++ s ++ d ++ m ++ c1 ++ c2 ++ c3
+        where   e  = "Effect:      " ++ (prettify $ effect opts) ++ "\n"
+                s  = "Speed:       " ++ (prettify $ speed opts) ++ "\n"
+                d  = "Direction:   " ++ (prettify $ direction opts) ++ "\n"
+                m  = "Colour mode: " ++ (prettify $ colourMode opts) ++ "\n"
+                c1 = "Colour 1:    " ++ (sRGB24show $ colour1 opts) ++ "\n"
+                c2 = "Colour 2:    " ++ (sRGB24show $ colour2 opts) ++ "\n"
+                c3 = "Colour 3:    " ++ (sRGB24show $ colour3 opts) ++ "\n"
+
+instance Show Options where
+    show opts = c ++ f ++ d ++ b ++ l
+        where   c = "Channel:    " ++ (show $ channel opts) ++ "\n"
+                f = "Fan:        " ++ (show $ fan opts) ++ "\n"
+                d = "Device:     " ++ (show $ device opts) ++ "\n"
+                b = "Brightness: " ++ (show $ brightness opts) ++ "\n"
+                l = show $ ledOptions opts

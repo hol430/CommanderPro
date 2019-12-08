@@ -5,11 +5,15 @@ module Protocol where
 -- https:--github.com/audiohacked/OpenCorsairLink/issues/70#issuecomment-380134782
 
 import Data.Word
+import Text.Regex
 
 type Byte = Word8
 
 class ToByte a where
     raw :: a -> Byte
+
+class Pretty a where
+    prettify :: a -> String
 
 data Command = ReadStatus | GetFirmwareVersion | GetId | WriteDeviceId | StartFirmwareUpdate | GetBootloaderVersion | WriteTestFlag | GetThermometerConfig | GetTemperature | GetVoltage | GetFanConfig | GetFanSpeed | GetFanPower | SetFanPower | SetFanSpeed | SetFanConfigGraph | SetFanTempInfo | SetFanForce | SetFanMode | GetFanMode | GetLedStripMask | SetLedValue | SetLedColourValues | SetLedTrigger | SetLedClear | SetLedMode | SetLedTempInfo | SetLedGroupClear | SetLedModeUnknown | SetLedBrightness | GetLedCount | SetLedPortType
 
@@ -131,7 +135,7 @@ instance ToByte Command where
 -- LED Channels
 -- --------------------------------------------------------------------
 
-data Channel = Channel1 | Channel2
+data Channel = Channel1 | Channel2 deriving (Enum, Bounded)
 instance ToByte Channel where
 
     -- LED Channel 1
@@ -140,11 +144,17 @@ instance ToByte Channel where
     -- LED Channel 2
     raw Channel2 = 0x01
 
+instance Show Channel where
+    show Channel1 = "1"
+    show Channel2 = "2"
+
 -- --------------------------------------------------------------------
 -- FAN IDs
 -- --------------------------------------------------------------------
 
 data Fan = Fan1 | Fan2 | Fan3 | Fan4 | Fan5 | Fan6
+           deriving (Enum, Bounded, Show)
+
 instance ToByte Fan where
 
     -- LED Fan 1
@@ -165,6 +175,14 @@ instance ToByte Fan where
     -- LED Fan 6
     raw Fan6 = 0x3C
 
+instance Pretty Fan where
+    prettify Fan1 = "1"
+    prettify Fan2 = "2"
+    prettify Fan3 = "3"
+    prettify Fan4 = "4"
+    prettify Fan5 = "5"
+    prettify Fan6 = "6"
+
 -- --------------------------------------------------------------------
 -- LED Types
 -- --------------------------------------------------------------------
@@ -173,6 +191,7 @@ data LedType =  LedTypeStrip
               | LedTypeHdFan
               | LedTypeSpFan
               | LedTypeMlFan
+              deriving (Enum, Bounded)
 instance ToByte LedType where
 
     -- RGB LED Strip
@@ -187,61 +206,74 @@ instance ToByte LedType where
     -- RGB ML Fan
     raw LedTypeMlFan = 0x04
 
+instance Show LedType where
+    show LedTypeStrip = "Strip LED"
+    show LedTypeHdFan = "HD Fan"
+    show LedTypeSpFan = "SP Fan"
+    show LedTypeMlFan = "Ml Fan"
+
 -- --------------------------------------------------------------------
 -- LED Effects
 -- --------------------------------------------------------------------
 
-data Effect = LedEffectRainbowWave
-            | LedEffectColourShift
-            | LedEffectColourPulse
-            | LedEffectColourWave
-            | LedEffectStatic
-            | LedEffectTemperature
-            | LedEffectVisor
-            | LedEffectMarquee
-            | LedEffectBlink
-            | LedEffectSequential
-            | LedEffectRainbow
+data Effect = RainbowWave
+            | ColourShift
+            | ColourPulse
+            | ColourWave
+            | Static
+            | Temperature
+            | Visor
+            | Marquee
+            | Blink
+            | Sequential
+            | Rainbow
+            deriving (Enum, Bounded, Show)
 instance ToByte Effect where
 
     -- Rainbow wave LED effect
-    raw LedEffectRainbowWave = 0x00
+    raw RainbowWave = 0x00
 
     -- Colour shift LED effect
-    raw LedEffectColourShift = 0x01
+    raw ColourShift = 0x01
 
     -- Colour pulse LED effect
-    raw LedEffectColourPulse = 0x02
+    raw ColourPulse = 0x02
 
     -- Colour wave LED effect
-    raw LedEffectColourWave = 0x03
+    raw ColourWave = 0x03
 
     -- Static LED colour
-    raw LedEffectStatic = 0x04
+    raw Static = 0x04
 
     -- Temperature LED effect
-    raw LedEffectTemperature = 0x05
+    raw Temperature = 0x05
 
     -- Visor LED effect
-    raw LedEffectVisor = 0x06
+    raw Visor = 0x06
 
     -- Marquee LED effect
-    raw LedEffectMarquee = 0x07
+    raw Marquee = 0x07
 
     -- Blink LED effect
-    raw LedEffectBlink = 0x08
+    raw Blink = 0x08
 
     -- Sequential (channel effect)
-    raw LedEffectSequential = 0x09
+    raw Sequential = 0x09
 
     -- Rainbow LED effect
-    raw LedEffectRainbow = 0x0A
+    raw Rainbow = 0x0A
+
+instance Pretty Effect where
+    prettify input = subRegex pattern str repl
+        where pattern = mkRegex "([A-Z][a-z]*)([A-Z][a-z]*)"
+              str     = show input
+              repl    = "\\1 \\2"
 
 -- --------------------------------------------------------------------
 -- LED Effect Speeds
 -- --------------------------------------------------------------------
 
-data Speed = High | Medium | Slow
+data Speed = High | Medium | Slow deriving (Enum, Bounded, Show)
 instance ToByte Speed where
 
     -- Fast LED speed
@@ -253,11 +285,14 @@ instance ToByte Speed where
     -- Slow LED speed
     raw Slow = 0x02
 
+instance Pretty Speed where
+    prettify = show
+
 -- --------------------------------------------------------------------
 -- LED Effect Directions
 -- --------------------------------------------------------------------
 
-data Direction = Backwards | Forwards
+data Direction = Backwards | Forwards deriving (Enum, Bounded, Show)
 instance ToByte Direction where
 
     -- Backwards direction for LED effects.
@@ -266,11 +301,14 @@ instance ToByte Direction where
     -- Forwards direction for LED effects.
     raw Forwards = 0x01
 
+instance Pretty Direction where
+    prettify = show
+
 -- --------------------------------------------------------------------
 -- LED Colour Modes
 -- --------------------------------------------------------------------
 
-data ColourMode = Alternating | Random
+data ColourMode = Alternating | Random deriving (Enum, Bounded, Show)
 instance ToByte ColourMode where
 
     -- Alternating colours
@@ -279,11 +317,14 @@ instance ToByte ColourMode where
     -- Random colours
     raw Random = 0x01
 
+instance Pretty ColourMode where
+    prettify = show
+    
 -- --------------------------------------------------------------------
 -- LED Brightnesses
 -- --------------------------------------------------------------------
 
-data Brightness = Max | Med | Low | Zero
+data Brightness = Max | Med | Low | Zero deriving (Enum, Bounded, Show)
 instance ToByte Brightness where
 
     -- 100% Brightness
@@ -297,3 +338,9 @@ instance ToByte Brightness where
 
     -- 0% Brightness
     raw Zero = 0x00
+
+instance Pretty Brightness where
+    prettify Max = "100%"
+    prettify Med = "66%"
+    prettify Low = "33%"
+    prettify Zero = "0%"

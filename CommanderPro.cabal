@@ -13,17 +13,6 @@ build-type:          Simple
 cabal-version:       >=1.10
 extra-source-files:  README.md
 
---library
---  hs-source-dirs:    src
---  build-depends:     base >= 4.7 && < 5,
---                     colour
---  exposed-modules:
---    Commands,
---    Led,
---    Protocol,
---    Options,
---    Comms
-
 executable CommanderPro
   hs-source-dirs:      src
   main-is:             Main.hs
@@ -31,7 +20,11 @@ executable CommanderPro
   build-depends:       base >= 4.7 && < 5,
                        hidapi,
                        colour,
-                       bytestring
+                       bytestring,
+                       gtk3,
+                       mtl,
+                       regex-compat,
+                       text
   other-modules:       Protocol,
                        Options,
                        Comms
